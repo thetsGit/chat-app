@@ -19,7 +19,7 @@ const server = app.listen(port, () => {
 //socket setup+
 const io = socket(server);
 io.on("connection", (socket) => {
-  socket.on("chat", (content) => {
-    console.log("content");
+  socket.on("chat", (data) => {
+    io.sockets.emit("chat", data);
   });
 });
