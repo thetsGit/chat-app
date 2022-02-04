@@ -4,16 +4,255 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat app</title>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"
-      integrity="sha512-iqRVtNB+t9O+epcgUTIPF+nklypcR23H1yR1NFM9kffn6/iBhZ9bTB6oKLaGMv8JE9UgjcwfBFg/eHC/VMws+g=="
+    <!-- <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css"
+      integrity="sha512-T584yQ/tdRR5QwOpfvDfVQUidzfgc2339Lc8uBDtcp/wYu80d7jwBgAxbyMh0a9YM9F8N3tdErpFI8iaGx6x5g=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
-    ></script>
+    /> -->
+    <title>Chat app</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap");
+
+      :root {
+        --shadow: 0 0 5px 3px #0001;
+        --primary: #00c9ff;
+        --font-face: "Quicksand", sans-serif;
+        --light-primary: #00c9ff10;
+        --border-radius: 0.5rem;
+      }
+      @keyframes toLeft {
+        0%{
+          transform: translateX(100px);
+          opacity: 0;
+        }
+        100%{
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes toRight {
+        0%{
+          transform: translateX(-100px);
+          opacity: 0;
+        }
+        100%{
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      body {
+        font-family: var(--font-face);
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        background-color: var(--light-primary);
+      }
+      /* scrollbar styles */
+      #content::-webkit-scrollbar {
+        width: .5em;
+      }
+      #content::-webkit-scrollbar-track {
+        background-color: #fff;
+        /* box-shadow: var(--shadow); */
+      }     
+      #content::-webkit-scrollbar-thumb {
+        background-color: var(--primary);
+        border-radius: var(--border-radius);
+      }
+
+      #container {
+        width: 95%;
+        max-width: 500px;
+        margin: 2rem auto;
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-rows: auto 1fr auto;
+        box-shadow: var(--shadow);
+        height: 600px;
+        background-color: transparent;
+        position: relative;
+        /* border-radius: var(--border-radius); */
+      }
+
+      #header {
+        box-shadow: 0 3px 3px 0 #0001;
+        text-align: center;
+        background-color: var(--primary);
+        color: #fff;
+      }
+
+      #content {
+        background-color: var(--light-primary);
+        overflow-y: scroll;
+        padding: 16px;
+        scrollbar-width: .5rem;
+        scrollbar-track-color: var(--primary);
+        position:relative;
+      }
+
+      #footer {
+        box-shadow: 0 -3px 3px 0 #0001;
+        background-color: #fff;
+        display: flex;
+      }
+
+      #header,
+      #footer {
+        border-radius: var(--border-radius);
+        padding: 0.8rem;
+        position: relative;
+      }
+
+      #inputBox {
+        border-radius: var(--border-radius);
+        background-color: var(--light-primary);
+        padding: 1rem;
+        border: 0;
+        flex-grow: 1;
+        padding-right: 5rem;
+        position: relative;
+      }
+
+      #inputBox:focus {
+        outline-color: var(--primary);
+      }
+
+      #nameBox{
+        padding: .5rem;
+        border: none;
+        border-bottom: 1px solid #fff;
+        text-align: center;
+        color: #fff;
+        background-color: var(--light-primary);
+      }
+
+      #nameBox:focus{
+        outline: none;
+        background-color: var(--light-primary);
+        transform: scale(1.1);
+      }
+
+      #nameBox::placeholder{
+        color: #fff8;
+      }
+
+      #sendBtn {
+        position: absolute;
+        right: 1.5rem;
+        align-self: center;
+        background-color: var(--primary);
+        border-width: 0;
+        padding: .5rem 1rem;
+        color: #fff;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        border-radius: var(--border-radius);
+      }
+
+      #sendBtn:hover{
+        box-shadow: 0 0 0 #000;
+      }
+
+      .messageWrap{
+         padding: .8rem .5rem;
+         background-color: #fff;
+         margin-bottom: .8rem;
+         display: block;
+         border-radius: var(--border-radius);
+         animation: toRight .3s;
+      }
+
+      .messageWrap>*{
+        margin: 0;
+      }
+
+      .messageWrap>h5{
+        font-size: .8rem;
+        color: var(--primary);
+        font-weight: bold;
+        margin-bottom: .5rem;
+      }
+
+      .messageWrap>p{
+        color: #000;
+      }
+
+      .d-none{
+        display: none;
+      }
+
+      #feedbackContainer{
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        /* height: 50px; */
+        bottom: 75px;
+        right: .5rem;
+        background-color: transparent;
+        /* opacity: .7; */
+        /* padding: .5rem; */
+        width: 100%;
+        align-items: end;
+        padding: 0 .5rem;
+      }
+      .feedbackMsg{
+        background-color: #FBF37C;
+        border-radius: 100px;
+        color: #000;
+        padding: .3rem .5rem;
+        margin-bottom: .5rem;
+        animation-name: toLeft;
+        animation-duration: .3s;
+      }
+    </style>
   </head>
-  <body></body>
-  <script>
-    const socket = io("http//localhost:3001");
-  </script>
+  <body>
+    <div id="container">
+      <div id="header">
+        <h3>Chat with us <i class="fab fa-facebook-messenger"></i></h3>
+        <input type="text" id="nameBox" placeholder="your name">
+      </div>
+      <div id="content">
+        <span class="messageWrap">
+          <h5>thethan</h5>
+          <p>hello!</p>
+        </span>
+      </div>
+      <div id="feedbackContainer">    
+        <!-- <span class="feedbackMsg">thethan is typing...</span>  
+        <span class="feedbackMsg">thethan is typing...</span>   -->
+        <span class="feedbackMsg">thethan is typing...</span>  
+      </div>
+      <div id="footer">
+        <input id="inputBox" placeholder="write a message..." >
+        </input>
+        <button id=sendBtn class="d-none"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </body>
+  <script
+  src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"
+  integrity="sha512-iqRVtNB+t9O+epcgUTIPF+nklypcR23H1yR1NFM9kffn6/iBhZ9bTB6oKLaGMv8JE9UgjcwfBFg/eHC/VMws+g=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+<script>
+  const socket = io("http://localhost:3001/");
+  const sendBtn = document.getElementById("sendBtn");
+  const inputBox = document.getElementById("inputBox");
+  const nameBox = document.getElementById("nameBox");
+
+  inputBox.addEventListener("keyup",(e)=>{
+    console.log(e.target.value);
+    if(e.target.value !== ""){
+        sendBtn.classList.remove("d-none");
+    }
+    else{
+      sendBtn.classList.add("d-none");
+    }
+  })
+</script>
 </html>

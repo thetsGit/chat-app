@@ -1,17 +1,25 @@
+//import required files
 const express = require("express");
 const socket = require("socket.io");
 
+//app setup
 const app = express();
-const io = socket();
 
+//routes
 app.get("/", (req, res) => {
-  res.send("index page").end();
+  res.sendFile(__dirname + "/public/index.html");
 });
 
+//server setup
 const port = 3001;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`server is running on port ${port}`);
 });
+
+//socket setup+
+const io = socket(server);
 io.on("connection", (socket) => {
-  console.log("socket connection established" + socket.id);
+  socket.on("chat", (content) => {
+    console.log("content");
+  });
 });
