@@ -218,7 +218,8 @@
       <div id="contentContainer">
        
       </div>
-      <div id="feedbackContainer">    
+      <div id="feedbackContainer">   
+         
       </div>
       <div id="footer">
         <input id="inputBox" placeholder="write a message..." >
@@ -234,41 +235,88 @@
   referrerpolicy="no-referrer"
 ></script>
 <script>
-  const socket = io("http://localhost:3001/");
-  const sendBtn = document.getElementById("sendBtn");
-  const inputBox = document.getElementById("inputBox");
-  const nameBox = document.getElementById("nameBox");
-  const feedbackContainer = document.getElementById("feedbackContainer");
-  const contentContainer = document.getElementById("contentContainer");
+  window.addEventListener("load",()=>{
 
-  // sendbtn show hide
-  inputBox.addEventListener("keyup",(e)=>{
-    if(e.target.value !== ""){
-        sendBtn.classList.remove("d-none");
-    }
-    else{
-      sendBtn.classList.add("d-none");
-    }
-  });
+    const socket = io("http://localhost:3001/");
+    const sendBtn = document.getElementById("sendBtn");
+    const inputBox = document.getElementById("inputBox");
+    const nameBox = document.getElementById("nameBox");
+    const feedbackContainer = document.getElementById("feedbackContainer");
+    const contentContainer = document.getElementById("contentContainer");
+    const randomNumber = Math.floor(Math.random() * 10000);
+    
+    nameBox.value = "User"+randomNumber;
+    // sendbtn show hide 
+    // emit typing event
+    inputBox.addEventListener("keyup",(e)=>{
+      const name = nameBox.value;
+      if(e.target.value !== ""){
+          socket.emit("typing",{name});
+          sendBtn.classList.remove("d-none");
+      }
+      else{
+        sendBtn.classList.add("d-none");
+      }
+    });
 
-  // send message
-  sendBtn.addEventListener("click",(e)=>{
-    const name = nameBox.value || 'unknown';
-    const data = {name, message: inputBox.value};
-    socket.emit("chat",data);
-    inputBox.value = "";
-  });
+    // send message
+    sendBtn.addEventListener("click",(e)=>{
+      const name = nameBox.value || 'unknown';
+      const data = {name, message: inputBox.value};
+      socket.emit("chat",data);
+      inputBox.value = "";
+    });
 
-  socket.on("chat",(data)=>{
-    const span = document.createElement("span");
-    span.classList.add("messageWrap");
-    span.innerHTML = 
-    `
-      <h5>${data.name}</h5>
-      <p>${data.message}</p>
-    `;
-    contentContainer.append(span);
-    span.scrollIntoView({behavior: "smooth",inline: "nearest"});
-  });
+    // listen chat event
+    socket.on("chat",(data)=>{
+      const span = document.createElement("span");
+      span.classList.add("messageWrap");
+      span.innerHTML = 
+      `
+        <h5>${data.name}</h5>
+        <p>${data.message}</p>
+      `;
+      contentContainer.append(span);
+      span.scrollIntoView({behavior: "smooth",inline: "nearest"});
+    });
+
+    //  listen typing event
+    let typingPersons = [];
+    let timers = [];
+    socket.on("typing",(name)=>{
+      if(!typingPersons.find(personName => personName === name)){
+        typingPersons = [...typingPersons,name];
+        const span = document.createElement("span");
+        span.classList.add("feedbackMsg");
+        span.id = name;
+        span.dataset.name = name;
+        span.innerHTML = 
+        `
+        ${name} is typing...
+        `;
+        feedbackContainer.append(span);
+        timer = setTimeout(() => {
+          console.log("original timer invoked",timer);
+          typingPersons = typingPersons.filter(personName => personName !== name);
+          timers = timers.filter(timer => timer.split("/")[0] !== name);
+          span.remove();
+        }, 2500);
+        timers = [...timers,name+"/"+timer];
+        }else{
+          const requiredSpan = document.getElementById(name);
+          console.log(requiredSpan,timer);
+          const requiredTimerId = timers.find(timer => timer.split("/")[0] === name);
+          clearTimeout(requiredTimerId.split("/")[1]);
+          timers = timers.filter(timer => timer.split("/")[0] !== name);
+          timer = setTimeout(() => {
+          typingPersons = typingPersons.filter(personName => personName !== name);
+          timers = timers.filter(timer => timer.split("/")[0] !== name);
+          requiredSpan.remove();
+          }, 2500);
+          timers = [...timers,name+"/"+timer];
+        }
+    });
+
+});
 </script>
 </html>
